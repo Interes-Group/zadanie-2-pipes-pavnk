@@ -1,5 +1,6 @@
 package sk.stuba.fei.uim.oop.pipes;
 
+import sk.stuba.fei.uim.oop.blocks.EmptyPipe;
 import sk.stuba.fei.uim.oop.board.Board;
 
 import javax.swing.*;
@@ -26,8 +27,9 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
 
     public Pipes(){
         setTitle("Pipes");
-        setSize(800,600);
+        setSize(650,725);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
 
         canvas = new JPanel() {
             @Override
@@ -79,10 +81,13 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
         topMenu.add(checkButton);
         checkButton.addActionListener(this);
 
+        canvas.setBackground(Color.BLACK);
+        canvas.setPreferredSize(new Dimension(600,600));
         setLayout(new BorderLayout());
         add(canvas, BorderLayout.CENTER);
         add(topMenu, BorderLayout.NORTH);
-
+        System.out.println(topMenu.getHeight());
+        System.out.println(topMenu.getWidth());
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -92,20 +97,22 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
         setFocusable(true);
         this.setVisible(true);
 
-        int boardSize = 8; // Desired size of the game board
+        int boardSize = 12;
         board = new Board(boardSize);
     }
 
     private void drawCanvas(Graphics g) {
-        // kód pre vykreslenie hracej plochy
+        for(int i=0;i<board.getSize();++i){
+            for(int j=0;j<board.getSize();++j){
+                board.getPipe(j,i).draw(g);
+            }
+        }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == resetButton) {
-            // obsluha tlačidla reset
         } else if (e.getSource() == checkButton) {
-            // obsluha tlačidla check
         }
     }
 
@@ -113,7 +120,6 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
     public void stateChanged(ChangeEvent e) {
         if (e.getSource() == sizeSlider) {
             gridSize = sizeSlider.getValue();
-            // obsluha zmeny hodnoty slideru
         }
     }
 }
