@@ -15,6 +15,12 @@ public class EmptyPipe extends Pipe {
 
     public void rotate() {
     }
+
+    @Override
+    public void redrawPipe() {
+
+    }
+
     @Override
     public void draw(Graphics g) {
         g.setColor(Color.WHITE);

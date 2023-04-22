@@ -7,6 +7,7 @@ public abstract class Pipe {
     protected int x;
     protected int y;
     protected int size;
+    protected boolean isHighlighted = false;
 
     public Pipe(int x, int y, int size){
         this.x = x*size;
@@ -14,6 +15,12 @@ public abstract class Pipe {
         this.size = size;
     }
 
+    public void setHighlighted(boolean highlighted){
+        isHighlighted = highlighted;
+    }
+    public boolean isHighlighted(){
+        return isHighlighted;
+    }
 
     public boolean isConnected() {
         return isConnected;
@@ -26,5 +33,6 @@ public abstract class Pipe {
     public abstract boolean canConnectTo(Pipe other);
 
     public abstract void rotate();
+    public abstract void redrawPipe();
     public abstract void draw(Graphics g);
 }

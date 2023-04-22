@@ -40,6 +40,12 @@ public class StraightPipe extends Pipe {
     public void rotate() {
         isHorizontal = !isHorizontal;
     }
+
+    @Override
+    public void redrawPipe() {
+
+    }
+
     @Override
     public void draw(Graphics g) {
         g.setColor(Color.WHITE);
@@ -54,6 +60,13 @@ public class StraightPipe extends Pipe {
             g.drawLine(x, y + size / 2, x + size, y + size / 2);
         } else {
             g.drawLine(x + size / 2, y, x + size / 2, y + size);
+        }
+        if(isHighlighted){
+            g.setColor(Color.BLUE);
+            g.drawLine(x,y,x+size,y);
+            g.drawLine(x+size,y,x+size,y+size);
+            g.drawLine(x+size,y+size,x,y+size);
+            g.drawLine(x,y+size,x,y);
         }
     }
 }

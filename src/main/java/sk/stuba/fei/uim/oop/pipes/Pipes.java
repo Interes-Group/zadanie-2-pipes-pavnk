@@ -1,6 +1,6 @@
 package sk.stuba.fei.uim.oop.pipes;
 
-import sk.stuba.fei.uim.oop.blocks.EmptyPipe;
+import sk.stuba.fei.uim.oop.blocks.*;
 import sk.stuba.fei.uim.oop.board.Board;
 
 import javax.swing.*;
@@ -8,6 +8,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.SQLOutput;
 import java.util.Hashtable;
 
 public class Pipes extends JFrame implements ActionListener, ChangeListener {
@@ -24,6 +25,7 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
     private boolean[][] pipes;
     private boolean[][] correctPipes;
     private Board board;
+    private int boardSize = 8;
 
     public Pipes(){
         setTitle("Pipes");
@@ -38,14 +40,44 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
                 drawCanvas(g);
             }
         };
+
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int row = e.getY() / (canvas.getHeight() / gridSize);
-                int col = e.getX() / (canvas.getWidth() / gridSize);
-                if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
-                    pipes[row][col] = !pipes[row][col];
-                    repaint();
+                int x = e.getX();
+                int y = e.getY();
+                int gridX = x / board.getPipeSize();
+                int gridY = y / board.getPipeSize();
+                Pipe clickedPipe = board.getPipeAt(gridX, gridY);
+                if (clickedPipe != null) {
+                    clickedPipe.rotate();
+                    board.getPipeAt(gridX,gridY).draw(canvas.getGraphics());
+                }
+            }
+        });
+
+        canvas.addMouseMotionListener(new MouseAdapter() {
+            private Pipe lastHighlightedPipe;
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int x = e.getX();
+                int y = e.getY();
+                int gridX = x / board.getPipeSize();
+                int gridY = y / board.getPipeSize();
+                Pipe pipe = board.getPipeAt(gridX, gridY);
+
+                if (pipe != null && pipe != lastHighlightedPipe) {
+                    if (lastHighlightedPipe != null) {
+                        lastHighlightedPipe.setHighlighted(false);
+                        lastHighlightedPipe.draw(canvas.getGraphics());
+                    }
+                    pipe.setHighlighted(true);
+                    pipe.draw(canvas.getGraphics());
+                    lastHighlightedPipe = pipe;
+                } else if (pipe == null && lastHighlightedPipe != null) {
+                    lastHighlightedPipe.setHighlighted(false);
+                    lastHighlightedPipe.draw(canvas.getGraphics());
+                    lastHighlightedPipe = null;
                 }
             }
         });
@@ -63,6 +95,7 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
         sizeSlider.setMajorTickSpacing(2);
         sizeSlider.setPaintTicks(true);
         sizeSlider.setSnapToTicks(true);
+        sizeSlider.addChangeListener(this);
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         labelTable.put(8, new JLabel("8"));
@@ -94,32 +127,41 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
                 // ovládanie klávesnicou
             }
         });
+
         setFocusable(true);
         this.setVisible(true);
 
-        int boardSize = 12;
         board = new Board(boardSize);
+    }
+
+
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == resetButton) {
+            board = new Board(boardSize);
+            canvas.repaint();
+        }
     }
 
     private void drawCanvas(Graphics g) {
         for(int i=0;i<board.getSize();++i){
             for(int j=0;j<board.getSize();++j){
-                board.getPipe(j,i).draw(g);
+                if(board.getPipe(j,i) != null) {
+                    board.getPipe(j, i).draw(g);
+                } else {
+                    System.out.println("Error in:");
+                    System.out.println(j + " - x " + i + " - y ");
+                }
             }
         }
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == resetButton) {
-        } else if (e.getSource() == checkButton) {
-        }
-    }
 
     @Override
     public void stateChanged(ChangeEvent e) {
         if (e.getSource() == sizeSlider) {
-            gridSize = sizeSlider.getValue();
+            boardSize = sizeSlider.getValue();
+            board = new Board(boardSize);
+            canvas.repaint();
         }
     }
 }

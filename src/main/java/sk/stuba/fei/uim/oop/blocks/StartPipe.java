@@ -11,6 +11,14 @@ public class StartPipe extends Pipe{
         this.orientation = orientation;
     }
 
+    public int getOrientation(){
+        return orientation;
+    }
+
+    public void setOrientation(int orientation){
+        this.orientation = orientation;
+    }
+
     @Override
     public boolean canConnectTo(Pipe other) {
         return (other instanceof StraightPipe || other instanceof CurvedPipe);
@@ -19,6 +27,11 @@ public class StartPipe extends Pipe{
     @Override
     public void rotate() {
         this.orientation = (this.orientation + 1) % 4;
+    }
+
+    @Override
+    public void redrawPipe() {
+
     }
 
     @Override

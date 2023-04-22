@@ -1,9 +1,6 @@
 package sk.stuba.fei.uim.oop.board;
 
-import sk.stuba.fei.uim.oop.blocks.EmptyPipe;
-import sk.stuba.fei.uim.oop.blocks.Pipe;
-import sk.stuba.fei.uim.oop.blocks.StartPipe;
-import sk.stuba.fei.uim.oop.blocks.StraightPipe;
+import sk.stuba.fei.uim.oop.blocks.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +29,17 @@ public class Board {
         generatePath();
         setPipeOrientations();
     }
+    public int getPipeSize(){
+        return pipeSize;
+    };
+
+    public Pipe getPipeAt(int x, int y) {
+        if (x < 0 || x >= grid[0].length || y < 0 || y >= grid.length) {
+            return null;
+        }
+        return grid[y][x];
+    }
+
     public Pipe getPipe(int x, int y){
         return grid[y][x];
     }
@@ -48,7 +56,83 @@ public class Board {
         }
         List<Integer[]> path = new ArrayList<>();
         generatePathRecursive(startX,startY,visited, path);
+        System.out.println();
+        for (Integer[] step : path) {
+            System.out.println(step[0] + " "+ step[1]);
+        }
+        System.out.println();
+        placePipes(path);
+    }
 
+    private void placePipes(List<Integer[]> path){
+        for (int i = 1; i < path.size()-1; i++) {
+            //prev je napravo od blocku
+            int deltaX  = Math.abs(path.get(i+1)[0] - path.get(i-1)[0]); //Neviem ako sa robi absolutna hodnota
+            int deltaY  = Math.abs(path.get(i+1)[1] - path.get(i-1)[1]);
+
+            if (deltaX == 2 || deltaY == 2) {
+                //Straight pipe
+                Random random = new Random();
+                boolean orientation = random.nextBoolean();
+                grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
+                grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
+            }
+            else {
+                //Curved pipe
+                Random random = new Random();
+                int orientation = random.nextInt(4);
+                grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
+            }
+            /*
+            if(path.get(i)[0] == path.get(i-1)[0]-1){
+
+                if(path.get(i)[0] == path.get(i+1)[0]+1){
+                    //next je vlavo, place straight
+                    Random random = new Random();
+                    boolean orientation = random.nextBoolean();
+                    grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
+                } else if(path.get(i)[1] == path.get(i+1)[1]+1 || path.get(i)[1] == path.get(i+1)[1]-1){
+                    //next je hore alebo dole, place curve
+                    Random random = new Random();
+                    int orientation = random.nextInt(4);
+                    grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
+                }
+            } else if(path.get(i)[0] == path.get(i-1)[0]+1){
+                //prev je nalavo od blocku
+                if(path.get(i)[0] == path.get(i+1)[0]-1){
+                    //next je vpravo, place straight
+                    Random random = new Random();
+                    boolean orientation = random.nextBoolean();
+                    grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
+                } else if(path.get(i)[1] == path.get(i+1)[1]+1 || path.get(i)[1] == path.get(i+1)[1]-1){
+                    Random random = new Random();
+                    int orientation = random.nextInt(4);
+                    grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
+                }
+            } else if(path.get(i)[1] == path.get(i-1)[1]-1){
+                //prev je dole
+                if(path.get(i)[1] == path.get(i+1)[1]+1){
+                    Random random = new Random();
+                    boolean orientation = random.nextBoolean();
+                    grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
+                } else if(path.get(i)[0] == path.get(i+1)[0]+1 || path.get(i)[0] == path.get(i+1)[0]-1){
+                    Random random = new Random();
+                    int orientation = random.nextInt(4);
+                    grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
+                }
+            } else if(path.get(i)[1] == path.get(i-1)[1]+1){
+                //prev je hore
+                if(path.get(i)[1] == path.get(i+1)[1]-1){
+                    Random random = new Random();
+                    boolean orientation = random.nextBoolean();
+                    grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
+                } else if(path.get(i)[0] == path.get(i+1)[0]+1 || path.get(i)[0] == path.get(i+1)[0]-1){
+                    Random random = new Random();
+                    int orientation = random.nextInt(4);
+                    grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
+                }
+            } */
+        }
     }
 
     private boolean generatePathRecursive(int currentX, int currentY,boolean[][] visited, List<Integer[]> path){
@@ -60,7 +144,6 @@ public class Board {
         Integer[] neighbour = chooseRandomNeighbour(currentX,currentY, visited);
         while(neighbour[0]!=-1 && neighbour[1]!=-1){
             if(generatePathRecursive(neighbour[0],neighbour[1],visited, path)) {
-                grid[currentY][currentX] = new StraightPipe(currentX,currentY, pipeSize, true);
                 path.add(new Integer[]{currentX,currentY});
                 return true;
             }
