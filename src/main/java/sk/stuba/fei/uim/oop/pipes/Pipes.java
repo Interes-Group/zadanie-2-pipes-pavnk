@@ -17,13 +17,15 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
     private final JButton resetButton;
     private final JButton checkButton;
     private Board board;
-    private int boardSize = 8;
+    private int boardSize;
     private Pipe lastHighlightedPipe;
     private final Random random;
 
     public Pipes(){
+        boardSize = 8;
         setTitle("Pipes");
-        setSize(650,725);
+        //setSize(650,725);
+        setSize(625,700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         this.random = new Random();
@@ -141,6 +143,11 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
         board = new Board(boardSize, random);
     }
 
+    private void resetKeyboardListener() {
+        canvas.requestFocus();
+        canvas.addKeyListener(this);
+    }
+
     @Override
     public void keyTyped(KeyEvent e) {
 
@@ -185,6 +192,7 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
         canvas.repaint();
         if (board.checkPath()) {
             Timer timer = new Timer(500, e -> {
+                resetKeyboardListener();
                 int currentLevel = Integer.parseInt(levelLabel.getText().split(" ")[1]);
                 int newLevel = currentLevel + 1;
                 levelLabel.setText("Level: " + newLevel);
@@ -198,6 +206,7 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
     }
 
     private void resetGame(){
+        resetKeyboardListener();
         levelLabel.setText("Level: 1");
         lastHighlightedPipe=null;
         board = new Board(boardSize,random);
