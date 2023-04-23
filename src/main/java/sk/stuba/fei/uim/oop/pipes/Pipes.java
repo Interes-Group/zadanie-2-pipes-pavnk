@@ -61,13 +61,7 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
                 int y = e.getY();
                 int gridX = x / logic.getPipeSize();
                 int gridY = y / logic.getPipeSize();
-                Pipe pipe = null;
-                try {
-                    pipe = logic.getPipeAt(gridX, gridY);
-                } catch (ArrayIndexOutOfBoundsException ex) {
-                    System.out.println("Mouse pointer out of bounds");
-                }
-
+                Pipe pipe = logic.getPipeAt(gridX, gridY);
                 if (pipe != null && pipe != lastHighlightedPipe) {
                     if (lastHighlightedPipe != null) {
                         lastHighlightedPipe.setHighlighted(false);
@@ -225,12 +219,8 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
     private void drawCanvas(Graphics g) {
         for(int i=0;i<logic.getSize();++i){
             for(int j=0;j<logic.getSize();++j){
-                try {
-                    if (logic.getPipe(j, i) != null) {
-                        logic.getPipe(j, i).draw(g);
-                    }
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    System.out.println("Array index out of bounds: " + e.getMessage());
+                if (logic.getPipe(j, i) != null) {
+                    logic.getPipe(j, i).draw(g);
                 }
             }
         }
