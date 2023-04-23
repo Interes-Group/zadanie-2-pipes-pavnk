@@ -4,10 +4,12 @@ import java.awt.*;
 
 public class StartPipe extends Pipe{
     private Direction orientation;
+    private final boolean isStart;
 
-    public StartPipe(int x, int y, int size, Direction orientation,boolean waterFlows, boolean isHighlighted) {
+    public StartPipe(int x, int y, int size, Direction orientation,boolean waterFlows, boolean isHighlighted, boolean isStart) {
         super(x,y,size,waterFlows,isHighlighted);
         this.orientation = orientation;
+        this.isStart = isStart;
     }
 
     @Override
@@ -52,6 +54,8 @@ public class StartPipe extends Pipe{
         } else {
             g.setColor(Color.RED);
         }
+        if(this.isStart)
+            g.setColor(Color.BLUE);
         if (orientation == Direction.UP) {
             g.fillRect(x + size / 3, y, size / 3, size-size/3);
         } else if (orientation == Direction.RIGHT) {

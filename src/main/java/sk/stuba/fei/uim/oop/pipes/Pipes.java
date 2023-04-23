@@ -55,6 +55,8 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
         canvas.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
+                logic.resetPipeFlow();
+                canvas.repaint();
                 int x = e.getX();
                 int y = e.getY();
                 int gridX = x / logic.getPipeSize();
@@ -194,6 +196,7 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
     }
 
     private void checkCorrectPath(){
+        resetKeyboardListener();
         logic.resetPipeFlow();
         canvas.repaint();
         if (logic.checkPath()) {

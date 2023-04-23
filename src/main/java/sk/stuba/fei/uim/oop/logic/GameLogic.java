@@ -232,8 +232,8 @@ public class GameLogic {
             }
         }
 
-        grid[startY][startX] = new StartPipe(startX,startY, pipeSize, Direction.values()[random.nextInt(4)], true,false);
-        grid[endY][endX] = new StartPipe(endX,endY, pipeSize, Direction.values()[random.nextInt(4)], false,false);
+        grid[startY][startX] = new StartPipe(startX,startY, pipeSize, Direction.values()[random.nextInt(4)], true,false, true);
+        grid[endY][endX] = new StartPipe(endX,endY, pipeSize, Direction.values()[random.nextInt(4)], false,false, false);
     }
 
     public void resetPipeFlow() {
