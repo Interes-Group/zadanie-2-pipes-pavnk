@@ -60,7 +60,12 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
                 int y = e.getY();
                 int gridX = x / board.getPipeSize();
                 int gridY = y / board.getPipeSize();
-                Pipe pipe = board.getPipeAt(gridX, gridY);
+                Pipe pipe = null;
+                try {
+                    pipe = board.getPipeAt(gridX, gridY);
+                } catch (ArrayIndexOutOfBoundsException ex) {
+                    System.out.println("Mouse pointer out of bounds");
+                }
 
                 if (pipe != null && pipe != lastHighlightedPipe) {
                     if (lastHighlightedPipe != null) {
