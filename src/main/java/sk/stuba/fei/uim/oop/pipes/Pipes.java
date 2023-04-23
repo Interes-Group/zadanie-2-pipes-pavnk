@@ -1,7 +1,7 @@
 package sk.stuba.fei.uim.oop.pipes;
 
 import sk.stuba.fei.uim.oop.blocks.*;
-import sk.stuba.fei.uim.oop.board.Board;
+import sk.stuba.fei.uim.oop.logic.GameLogic;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +16,7 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
     private final JSlider sizeSlider;
     private final JButton resetButton;
     private final JButton checkButton;
-    private Board board;
+    private GameLogic logic;
     private int boardSize;
     private Pipe lastHighlightedPipe;
     private final Random random;
@@ -24,7 +24,6 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
     public Pipes(){
         boardSize = 8;
         setTitle("Pipes");
-        //setSize(650,725);
         setSize(625,700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
@@ -43,12 +42,12 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
             public void mouseClicked(MouseEvent e) {
                 int x = e.getX();
                 int y = e.getY();
-                int gridX = x / board.getPipeSize();
-                int gridY = y / board.getPipeSize();
-                Pipe clickedPipe = board.getPipeAt(gridX, gridY);
+                int gridX = x / logic.getPipeSize();
+                int gridY = y / logic.getPipeSize();
+                Pipe clickedPipe = logic.getPipeAt(gridX, gridY);
                 if (clickedPipe != null) {
                     clickedPipe.rotate();
-                    board.getPipeAt(gridX,gridY).draw(canvas.getGraphics());
+                    logic.getPipeAt(gridX,gridY).draw(canvas.getGraphics());
                 }
             }
         });
@@ -58,11 +57,11 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
             public void mouseMoved(MouseEvent e) {
                 int x = e.getX();
                 int y = e.getY();
-                int gridX = x / board.getPipeSize();
-                int gridY = y / board.getPipeSize();
+                int gridX = x / logic.getPipeSize();
+                int gridY = y / logic.getPipeSize();
                 Pipe pipe = null;
                 try {
-                    pipe = board.getPipeAt(gridX, gridY);
+                    pipe = logic.getPipeAt(gridX, gridY);
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     System.out.println("Mouse pointer out of bounds");
                 }
@@ -100,10 +99,11 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
         BoundedRangeModel sliderModel = sizeSlider.getModel();
         sliderModel.addChangeListener(e -> {
             if (!sliderModel.getValueIsAdjusting()) {
+                resetKeyboardListener();
                 levelLabel.setText("Level: 1");
                 lastHighlightedPipe=null;
                 boardSize = 8 + sizeSlider.getValue() * 2;
-                board = new Board(boardSize, random);
+                logic = new GameLogic(boardSize, random);
                 canvas.repaint();
             }
         });
@@ -145,10 +145,11 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
         addKeyListener(this);
         this.setVisible(true);
 
-        board = new Board(boardSize, random);
+        logic = new GameLogic(boardSize, random);
     }
 
     private void resetKeyboardListener() {
+        canvas.removeKeyListener(this);
         canvas.requestFocus();
         canvas.addKeyListener(this);
     }
@@ -193,16 +194,16 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
     }
 
     private void checkCorrectPath(){
-        board.resetPipeFlow();
+        logic.resetPipeFlow();
         canvas.repaint();
-        if (board.checkPath()) {
+        if (logic.checkPath()) {
             Timer timer = new Timer(500, e -> {
                 resetKeyboardListener();
                 int currentLevel = Integer.parseInt(levelLabel.getText().split(" ")[1]);
                 int newLevel = currentLevel + 1;
                 levelLabel.setText("Level: " + newLevel);
                 lastHighlightedPipe = null;
-                board = new Board(boardSize, random);
+                logic = new GameLogic(boardSize, random);
                 canvas.repaint();
             });
             timer.setRepeats(false);
@@ -211,19 +212,19 @@ public class Pipes extends JFrame implements ActionListener, KeyListener {
     }
 
     private void resetGame(){
-        resetKeyboardListener();
         levelLabel.setText("Level: 1");
         lastHighlightedPipe=null;
-        board = new Board(boardSize,random);
+        logic = new GameLogic(boardSize,random);
+        resetKeyboardListener();
         canvas.repaint();
     }
 
     private void drawCanvas(Graphics g) {
-        for(int i=0;i<board.getSize();++i){
-            for(int j=0;j<board.getSize();++j){
+        for(int i=0;i<logic.getSize();++i){
+            for(int j=0;j<logic.getSize();++j){
                 try {
-                    if (board.getPipe(j, i) != null) {
-                        board.getPipe(j, i).draw(g);
+                    if (logic.getPipe(j, i) != null) {
+                        logic.getPipe(j, i).draw(g);
                     }
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println("Array index out of bounds: " + e.getMessage());

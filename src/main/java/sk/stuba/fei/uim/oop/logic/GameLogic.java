@@ -1,4 +1,4 @@
-package sk.stuba.fei.uim.oop.board;
+package sk.stuba.fei.uim.oop.logic;
 
 import sk.stuba.fei.uim.oop.blocks.*;
 
@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Board {
+public class GameLogic {
     private final Pipe[][] grid;
     private int startX;
     private int startY;
@@ -16,7 +16,7 @@ public class Board {
     private final int size;
     private final Random random;
 
-    public Board(int size, Random random) {
+    public GameLogic(int size, Random random) {
         this.random = random;
         this.size = size;
         pipeSize = 600/size;
