@@ -3,55 +3,63 @@ package sk.stuba.fei.uim.oop.blocks;
 import java.awt.*;
 
 public class StartPipe extends Pipe{
-    private boolean isClockwise;
-    private int orientation;
+    private Direction orientation;
 
-    public StartPipe(int x, int y, int size, int orientation) {
-        super(x,y,size);
-        this.orientation = orientation;
-    }
-
-    public int getOrientation(){
-        return orientation;
-    }
-
-    public void setOrientation(int orientation){
+    public StartPipe(int x, int y, int size, Direction orientation,boolean waterFlows, boolean isHighlighted) {
+        super(x,y,size,waterFlows,isHighlighted);
         this.orientation = orientation;
     }
 
     @Override
-    public boolean canConnectTo(Pipe other) {
-        return (other instanceof StraightPipe || other instanceof CurvedPipe);
+    public void setWaterFlows(boolean waterFlows) {
+        this.waterFlows = waterFlows;
+    }
+
+    @Override
+    public boolean isFacingUp() {
+        return this.orientation == Direction.UP;
+    }
+
+    @Override
+    public boolean isFacingDown() {
+        return this.orientation == Direction.DOWN;
+    }
+
+    @Override
+    public boolean isFacingLeft() {
+        return this.orientation == Direction.LEFT;
+    }
+
+    @Override
+    public boolean isFacingRight() {
+        return this.orientation == Direction.RIGHT;
     }
 
     @Override
     public void rotate() {
-        this.orientation = (this.orientation + 1) % 4;
-    }
-
-    @Override
-    public void redrawPipe() {
-
+        this.orientation = Direction.values()[(this.orientation.ordinal()+1)%4];
     }
 
     @Override
     public void draw(Graphics g) {
-        g.setColor(Color.WHITE);
-        g.fillRect(x, y, size, size);
-
-        g.setColor(Color.BLACK);
-        g.drawLine(x,y,x+size,y);
-        g.drawLine(x+size,y,x+size,y+size);
-        g.drawLine(x,y+size,x+size,y+size);
-        g.drawLine(x,y,x,y+size);
-        if (orientation == 0) {
-            g.drawLine(x + size/2, y + size/2, x + size/2, y);
-        } else if (orientation == 1) {
-            g.drawLine(x+size/2,y+size/2,x+size,y+size/2);
-        } else if (orientation == 2) {
-            g.drawLine(x+size/2,y+size/2,x+size/2,y+size);
-        } else if (orientation == 3) {
-            g.drawLine(x + size/2, y+size/2, x, y + size/2);
+        if(isHighlighted)
+            drawHighlight(g);
+        else
+            drawBackground(g);
+        drawBorder(g);
+        if(this.waterFlows){
+            g.setColor(Color.BLUE);
+        } else {
+            g.setColor(Color.RED);
+        }
+        if (orientation == Direction.UP) {
+            g.fillRect(x + size / 3, y, size / 3, size-size/3);
+        } else if (orientation == Direction.RIGHT) {
+            g.fillRect(x + size / 3, y+size/3, size-size / 3, size/3);
+        } else if (orientation == Direction.DOWN) {
+            g.fillRect(x + size / 3, y+size/3, size / 3, size-size/3);
+        } else if (orientation == Direction.LEFT) {
+            g.fillRect(x, y+size/3, size-size/3, size/3);
         }
     }
 }

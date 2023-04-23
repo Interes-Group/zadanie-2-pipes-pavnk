@@ -1,34 +1,47 @@
 package sk.stuba.fei.uim.oop.blocks;
 
-import java.awt.Color;
 import java.awt.Graphics;
 
 public class EmptyPipe extends Pipe {
 
-    public EmptyPipe(int x, int y, int size) {
-        super(x,y,size);
+    public EmptyPipe(int x, int y, int size, boolean waterFlows, boolean isHighlighted) {
+        super(x,y,size,waterFlows,isHighlighted);
+    }
+    @Override
+    public void setWaterFlows(boolean waterFlows) {
+        this.waterFlows = waterFlows;
     }
 
-    public boolean canConnectTo(Pipe other) {
+    @Override
+    public boolean isFacingUp() {
+        return false;
+    }
+
+    @Override
+    public boolean isFacingDown() {
+        return false;
+    }
+
+    @Override
+    public boolean isFacingLeft() {
+        return false;
+    }
+
+    @Override
+    public boolean isFacingRight() {
         return false;
     }
 
     public void rotate() {
     }
 
-    @Override
-    public void redrawPipe() {
-
-    }
 
     @Override
     public void draw(Graphics g) {
-        g.setColor(Color.WHITE);
-        g.fillRect(x, y, size, size);
-        g.setColor(Color.BLACK);
-        g.drawLine(x,y,x+size,y);
-        g.drawLine(x+size,y,x+size,y+size);
-        g.drawLine(x,y+size,x+size,y+size);
-        g.drawLine(x,y,x,y+size);
+        if(isHighlighted)
+            drawHighlight(g);
+        else
+            drawBackground(g);
+        drawBorder(g);
     }
 }

@@ -4,34 +4,29 @@ import sk.stuba.fei.uim.oop.blocks.*;
 import sk.stuba.fei.uim.oop.board.Board;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.SQLOutput;
 import java.util.Hashtable;
+import java.util.Random;
 
-public class Pipes extends JFrame implements ActionListener, ChangeListener {
+public class Pipes extends JFrame implements ActionListener, KeyListener {
 
-    private JPanel canvas;
-    private JPanel topMenu;
-    private JLabel levelLabel;
-    private JLabel sizeLabel;
-    private JSlider sizeSlider;
-    private JButton resetButton;
-    private JButton checkButton;
-    private int currentLevel;
-    private int gridSize;
-    private boolean[][] pipes;
-    private boolean[][] correctPipes;
+    private final JPanel canvas;
+    private final JLabel levelLabel;
+    private final JSlider sizeSlider;
+    private final JButton resetButton;
+    private final JButton checkButton;
     private Board board;
     private int boardSize = 8;
+    private Pipe lastHighlightedPipe;
+    private final Random random;
 
     public Pipes(){
         setTitle("Pipes");
         setSize(650,725);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
+        this.random = new Random();
 
         canvas = new JPanel() {
             @Override
@@ -57,7 +52,6 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
         });
 
         canvas.addMouseMotionListener(new MouseAdapter() {
-            private Pipe lastHighlightedPipe;
             @Override
             public void mouseMoved(MouseEvent e) {
                 int x = e.getX();
@@ -82,25 +76,45 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
             }
         });
 
-        topMenu = new JPanel();
+
+        JPanel topMenu = new JPanel();
         topMenu.setLayout(new FlowLayout());
 
         levelLabel = new JLabel("Level: 1");
         topMenu.add(levelLabel);
 
-        sizeLabel = new JLabel("Size:");
+        JLabel sizeLabel = new JLabel("Size:");
         topMenu.add(sizeLabel);
 
-        sizeSlider = new JSlider(JSlider.HORIZONTAL, 8, 12, 8);
-        sizeSlider.setMajorTickSpacing(2);
+        sizeSlider = new JSlider(JSlider.HORIZONTAL, 0, 2, 0);
+        sizeSlider.setMajorTickSpacing(1);
         sizeSlider.setPaintTicks(true);
         sizeSlider.setSnapToTicks(true);
-        sizeSlider.addChangeListener(this);
+        BoundedRangeModel sliderModel = sizeSlider.getModel();
+        sliderModel.addChangeListener(e -> {
+            if (!sliderModel.getValueIsAdjusting()) {
+                levelLabel.setText("Level: 1");
+                lastHighlightedPipe=null;
+                boardSize = 8 + sizeSlider.getValue() * 2;
+                board = new Board(boardSize, random);
+                canvas.repaint();
+            }
+        });
+        topMenu.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (lastHighlightedPipe != null) {
+                    lastHighlightedPipe.setHighlighted(false);
+                    lastHighlightedPipe.draw(canvas.getGraphics());
+                    lastHighlightedPipe = null;
+                }
+            }
+        });
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
-        labelTable.put(8, new JLabel("8"));
-        labelTable.put(10, new JLabel("10"));
-        labelTable.put(12, new JLabel("12"));
+        labelTable.put(0, new JLabel("8"));
+        labelTable.put(1, new JLabel("10"));
+        labelTable.put(2, new JLabel("12"));
 
         sizeSlider.setLabelTable(labelTable);
         sizeSlider.setPaintLabels(true);
@@ -119,49 +133,88 @@ public class Pipes extends JFrame implements ActionListener, ChangeListener {
         setLayout(new BorderLayout());
         add(canvas, BorderLayout.CENTER);
         add(topMenu, BorderLayout.NORTH);
-        System.out.println(topMenu.getHeight());
-        System.out.println(topMenu.getWidth());
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                // ovládanie klávesnicou
-            }
-        });
 
         setFocusable(true);
+        addKeyListener(this);
         this.setVisible(true);
 
-        board = new Board(boardSize);
+        board = new Board(boardSize, random);
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+
+        switch (keyCode) {
+            case KeyEvent.VK_ESCAPE:
+                System.exit(0);
+                break;
+            case KeyEvent.VK_R:
+                resetGame();
+                break;
+            case KeyEvent.VK_ENTER:
+                checkCorrectPath();
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
     }
 
 
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == resetButton) {
-            board = new Board(boardSize);
-            canvas.repaint();
+        if (e.getSource() == checkButton) {
+            checkCorrectPath();
         }
+        if (e.getSource() == resetButton) {
+            resetGame();
+        }
+    }
+
+    private void checkCorrectPath(){
+        board.resetPipeFlow();
+        canvas.repaint();
+        if (board.checkPath()) {
+            Timer timer = new Timer(500, e -> {
+                int currentLevel = Integer.parseInt(levelLabel.getText().split(" ")[1]);
+                int newLevel = currentLevel + 1;
+                levelLabel.setText("Level: " + newLevel);
+                lastHighlightedPipe = null;
+                board = new Board(boardSize, random);
+                canvas.repaint();
+            });
+            timer.setRepeats(false);
+            timer.start();
+        }
+    }
+
+    private void resetGame(){
+        levelLabel.setText("Level: 1");
+        lastHighlightedPipe=null;
+        board = new Board(boardSize,random);
+        canvas.repaint();
     }
 
     private void drawCanvas(Graphics g) {
         for(int i=0;i<board.getSize();++i){
             for(int j=0;j<board.getSize();++j){
-                if(board.getPipe(j,i) != null) {
-                    board.getPipe(j, i).draw(g);
-                } else {
-                    System.out.println("Error in:");
-                    System.out.println(j + " - x " + i + " - y ");
+                try {
+                    if (board.getPipe(j, i) != null) {
+                        board.getPipe(j, i).draw(g);
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("Array index out of bounds: " + e.getMessage());
                 }
             }
-        }
-    }
-
-
-    @Override
-    public void stateChanged(ChangeEvent e) {
-        if (e.getSource() == sizeSlider) {
-            boardSize = sizeSlider.getValue();
-            board = new Board(boardSize);
-            canvas.repaint();
         }
     }
 }

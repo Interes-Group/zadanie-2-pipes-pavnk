@@ -3,26 +3,27 @@ package sk.stuba.fei.uim.oop.board;
 import sk.stuba.fei.uim.oop.blocks.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 public class Board {
-    private Pipe[][] grid;
+    private final Pipe[][] grid;
     private int startX;
     private int startY;
     private int endX;
     private int endY;
-    private int pipeSize;
-    private int size;
+    private final int pipeSize;
+    private final int size;
+    private final Random random;
 
-    public Board(int size) {
+    public Board(int size, Random random) {
+        this.random = random;
         this.size = size;
         pipeSize = 600/size;
         this.grid = new Pipe[size][size];
         for(int i=0;i<size;++i){
             for(int j=0;j<size;++j){
-                grid[i][j]=new EmptyPipe(j,i,pipeSize);
+                grid[i][j]=new EmptyPipe(j,i,pipeSize,false,false);
             }
         }
         setStartAndGoal(size);
@@ -31,7 +32,7 @@ public class Board {
     }
     public int getPipeSize(){
         return pipeSize;
-    };
+    }
 
     public Pipe getPipeAt(int x, int y) {
         if (x < 0 || x >= grid[0].length || y < 0 || y >= grid.length) {
@@ -47,6 +48,82 @@ public class Board {
         return this.size;
     }
 
+    public boolean checkPath(){
+        getPipeAt(startX,startY).setWaterFlows(true);
+        if(checkConnected(startX, startY, Direction.UP)){
+            return checkPathRecursive(startX,startY-1,Direction.DOWN);
+        }
+        if(checkConnected(startX, startY, Direction.RIGHT)){
+            return checkPathRecursive(startX+1,startY,Direction.LEFT);
+        }
+        if(checkConnected(startX, startY, Direction.DOWN)){
+            return checkPathRecursive(startX,startY+1,Direction.UP);
+        }
+        if(checkConnected(startX, startY, Direction.LEFT)){
+            return checkPathRecursive(startX-1,startY,Direction.RIGHT);
+        }
+        return false;
+    }
+
+    private boolean checkPathRecursive(int x, int y, Direction previous){
+        Pipe pipe = getPipeAt(x,y);
+        pipe.setWaterFlows(true);
+        if(x == endX && y == endY)
+            return true;
+        if(previous != Direction.UP && checkConnected(x, y, Direction.UP)){
+            return checkPathRecursive(x,y-1,Direction.DOWN);
+        }
+        if(previous != Direction.RIGHT && checkConnected(x, y, Direction.RIGHT)){
+            return checkPathRecursive(x+1,y,Direction.LEFT);
+        }
+        if(previous != Direction.DOWN && checkConnected(x, y, Direction.DOWN)){
+            return checkPathRecursive(x,y+1,Direction.UP);
+        }
+        if(previous != Direction.LEFT && checkConnected(x, y, Direction.LEFT)){
+            return checkPathRecursive(x-1,y,Direction.RIGHT);
+        }
+        return false;
+    }
+
+    private boolean checkConnected(int x, int y, Direction direction){
+        switch (direction){
+            case UP: {
+                if (!grid[y][x].isFacingUp())
+                    return false;
+                Pipe nextPipe = getPipeAt(x, y - 1);
+                if (nextPipe == null)
+                    return false;
+                return nextPipe.isFacingDown();
+            }
+            case RIGHT: {
+                if (!grid[y][x].isFacingRight())
+                    return false;
+                Pipe nextPipe = getPipeAt(x + 1, y);
+                if (nextPipe == null)
+                    return false;
+                return nextPipe.isFacingLeft();
+            }
+            case DOWN:{
+                if (!grid[y][x].isFacingDown())
+                    return false;
+                Pipe nextPipe = getPipeAt(x, y+1);
+                if (nextPipe == null)
+                    return false;
+                return nextPipe.isFacingUp();
+            }
+            case LEFT: {
+                if (!grid[y][x].isFacingLeft())
+                    return false;
+                Pipe nextPipe = getPipeAt(x-1, y);
+                if (nextPipe == null)
+                    return false;
+                return nextPipe.isFacingRight();
+            }
+            default:
+                return false;
+        }
+    }
+
     private void generatePath() {
         boolean[][] visited = new boolean[size][size];
         for(int i=0;i<size;++i){
@@ -56,82 +133,22 @@ public class Board {
         }
         List<Integer[]> path = new ArrayList<>();
         generatePathRecursive(startX,startY,visited, path);
-        System.out.println();
-        for (Integer[] step : path) {
-            System.out.println(step[0] + " "+ step[1]);
-        }
-        System.out.println();
         placePipes(path);
     }
 
     private void placePipes(List<Integer[]> path){
         for (int i = 1; i < path.size()-1; i++) {
-            //prev je napravo od blocku
-            int deltaX  = Math.abs(path.get(i+1)[0] - path.get(i-1)[0]); //Neviem ako sa robi absolutna hodnota
+            int deltaX  = Math.abs(path.get(i+1)[0] - path.get(i-1)[0]);
             int deltaY  = Math.abs(path.get(i+1)[1] - path.get(i-1)[1]);
 
             if (deltaX == 2 || deltaY == 2) {
-                //Straight pipe
-                Random random = new Random();
                 boolean orientation = random.nextBoolean();
-                grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
-                grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
+                grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation, false,false);
             }
             else {
-                //Curved pipe
-                Random random = new Random();
                 int orientation = random.nextInt(4);
-                grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
+                grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize, OrientationCurved.values()[orientation], false,false);
             }
-            /*
-            if(path.get(i)[0] == path.get(i-1)[0]-1){
-
-                if(path.get(i)[0] == path.get(i+1)[0]+1){
-                    //next je vlavo, place straight
-                    Random random = new Random();
-                    boolean orientation = random.nextBoolean();
-                    grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
-                } else if(path.get(i)[1] == path.get(i+1)[1]+1 || path.get(i)[1] == path.get(i+1)[1]-1){
-                    //next je hore alebo dole, place curve
-                    Random random = new Random();
-                    int orientation = random.nextInt(4);
-                    grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
-                }
-            } else if(path.get(i)[0] == path.get(i-1)[0]+1){
-                //prev je nalavo od blocku
-                if(path.get(i)[0] == path.get(i+1)[0]-1){
-                    //next je vpravo, place straight
-                    Random random = new Random();
-                    boolean orientation = random.nextBoolean();
-                    grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
-                } else if(path.get(i)[1] == path.get(i+1)[1]+1 || path.get(i)[1] == path.get(i+1)[1]-1){
-                    Random random = new Random();
-                    int orientation = random.nextInt(4);
-                    grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
-                }
-            } else if(path.get(i)[1] == path.get(i-1)[1]-1){
-                //prev je dole
-                if(path.get(i)[1] == path.get(i+1)[1]+1){
-                    Random random = new Random();
-                    boolean orientation = random.nextBoolean();
-                    grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
-                } else if(path.get(i)[0] == path.get(i+1)[0]+1 || path.get(i)[0] == path.get(i+1)[0]-1){
-                    Random random = new Random();
-                    int orientation = random.nextInt(4);
-                    grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
-                }
-            } else if(path.get(i)[1] == path.get(i-1)[1]+1){
-                //prev je hore
-                if(path.get(i)[1] == path.get(i+1)[1]-1){
-                    Random random = new Random();
-                    boolean orientation = random.nextBoolean();
-                    grid[path.get(i)[1]][path.get(i)[0]] = new StraightPipe(path.get(i)[0], path.get(i)[1],pipeSize,orientation);
-                } else if(path.get(i)[0] == path.get(i+1)[0]+1 || path.get(i)[0] == path.get(i+1)[0]-1){
-                    Random random = new Random();
-                    int orientation = random.nextInt(4);
-                    grid[path.get(i)[1]][path.get(i)[0]] = new CurvedPipe(path.get(i)[0], path.get(i)[1],pipeSize,false,orientation);
-                }
-            } */
         }
     }
 
@@ -169,7 +186,6 @@ public class Board {
         if(neighbors.size() == 0){
             return new Integer[]{-1,-1};
         }
-        Random random = new Random();
         return neighbors.get(random.nextInt(neighbors.size()));
     }
     private boolean checkValid(int x, int y, boolean[][] visited){
@@ -179,7 +195,6 @@ public class Board {
     }
 
     private void setStartAndGoal(int size) {
-        Random random = new Random();
         startX = random.nextInt(size);
         if(startX == 0 || startX == size-1){
             startY = random.nextInt(size);
@@ -217,8 +232,15 @@ public class Board {
             }
         }
 
-        grid[startY][startX] = new StartPipe(startX,startY, pipeSize, random.nextInt(4));
-        grid[endY][endX] = new StartPipe(endX,endY, pipeSize, random.nextInt(4));
+        grid[startY][startX] = new StartPipe(startX,startY, pipeSize, Direction.values()[random.nextInt(4)], true,false);
+        grid[endY][endX] = new StartPipe(endX,endY, pipeSize, Direction.values()[random.nextInt(4)], false,false);
     }
 
+    public void resetPipeFlow() {
+        for (Pipe[] pipes : grid) {
+            for (int j = 0; j < grid[0].length; ++j) {
+                pipes[j].setWaterFlows(false);
+            }
+        }
+    }
 }
